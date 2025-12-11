@@ -125,3 +125,279 @@ function handleWeatherSubmit(event){
     if (!city) return;
     fetchWeather(city);
 }
+
+
+async function fetchWeather(city) {
+    weatherError.hidden = true;
+    weatherError.textContent = "";
+    weatherResult.innerHTML = "<p>Loading weather...</p>";
+
+    const encodedCity = encodeURIComponent(city);
+    const url = `https://wttr.in/${encodedCity}?format=j1`;
+    
+    try {
+        const response = await fetch(url);
+        if (!response.ok){
+            throw new Error("No current condition data found.");
+        }
+
+        const data = await response.json();
+        const current = data.current_condition && data.current_condition[0];
+        if (!current){
+            throw new Error("No current condition data found.");
+        }
+
+        state.weather = {
+            city: city,
+            temperatureC: parseFloat(current.temp_C),
+            feelsLikeC: parseFloat(current.FeelsLikeC),
+            description:
+                current.weatherDesc && current.weatherDesc[0]
+                    ? current.weatherDesc[0].value
+                    : "N/A",
+            humidity: parseFloat(current.humidity),
+            windKph: parseFloat(current.windspeedKmph)
+        };
+
+        applyWeatherFilters();
+        renderWeather();
+    } catch (error) {
+        console.error("Weather error:", error);
+        weatherResult.innerHTML = "";
+        weatherError.hidden = false;
+        weatherError.textContent = "Could not load weather data. Please try another city or try again later.";
+    }
+}
+
+function applyWeatherFilters() {
+    if (!state.weather) {
+        state.filteredWeather = null;
+        return;
+    }
+
+    const tempFilter = tempFilterSelect.value;
+    const conditionFilter = conditionFilterSelect.value;
+    const w = state.weather;
+
+    let passesTemp = true;
+    let passesCondition = true;
+
+    if (!isNaN(w.temperatureC)) {
+        if (tempFilter === "hot") {
+            passesTemp = w.temperatureC >= 30;
+        } else if (tempFilter === "warm") {
+            passesTemp = w.temperatureC >= 20 && w.temperatureC <= 29;
+        } else if (tempFilter === "cold"){
+            passesTemp = w.temperatureC < 20;
+        }
+    }
+
+    const descLower = (w.description || "").toLowerCase();
+    if (conditionFilter === "clear") {
+        passesCondition = descLower.includes("clear") || descLower.includes("sunny");
+    } else if (conditionFilter === "cloud") {
+        passesCondition = descLower.includes("cloud");
+    } else if (conditionFilter === "rain") {
+        passesCondition = descLower.includes("rain");
+    }
+
+    if (passesTemp && passesCondition) {
+        state.filteredWeather = w;
+    } else {
+        state.filteredWeather = null;
+    }
+}
+
+function renderWeather() {
+    if (!state.weather) {
+        weatherResult.innerHTML = "<p>No weather data available. Please search for a city.</p>";
+        return;
+    }
+
+    if (!state.filteredWeather){
+        weatherResult.innerHTML = "<p>No results for the selected filters.</p>";
+        return;
+    }
+
+    const w = state.filteredWeather;
+    let feelsMessage = "";
+
+    if (!isNaN(w.temperatureC) && !isNaN(w.feelsLikeC)) {
+        const diff = w.feelsLikeC - w.temperatureC;
+        if (diff >= 3){
+            feelsMessage = "It feels hotter than the actual temperature.";
+        } else if (diff  <= -3) {
+            feelsMessage = "It feels colder than the actual temperature.";
+        } else {
+            feelsMessage = "It feels close to the actual temperature.";
+        }
+    }
+
+    weatherResult.innerHTML = `<div id="weather-result-card">
+            <h3>Weather in ${w.city}</h3>
+            <p><strong>Temperature:</strong> ${w.temperatureC} &deg;C</p>
+            <p><strong>Feels Like:</strong> ${w.feelsLikeC} &deg;C</p>
+            <p><strong>Condition:</strong> ${w.description}</p>
+            <p><strong>Humidity:</strong> ${w.humidity}%</p>
+            <p><strong>Wind speed:</strong> ${w.windKph} km/h</p>
+            <p>${feelsMessage}</p>
+            </div>
+        `;
+}
+
+
+function getFilteredProjects() {
+    const q = searchInput.value.trim().toLowerCase();
+    const cat = filterCategory.value;
+    const sort = sortSelect.value;
+
+    let list = projectsData.filter(p => {
+        const matchesQ = !q || (p.title + ' ' + p.desc).toLowerCase().includes(q);
+        const matchesCat = cat === 'all' ? true : p.category === cat;
+        return matchesQ && matchesCat;
+    });
+
+    if (sort === 'title') {
+        list.sort((a,b)=> a.title.localeCompare(b.title));
+    } else {
+        list.sort((a,b)=> new Date(b.date) - new Date(a.date));
+    }
+    return list;
+}
+
+function renderProjects(list) {
+    projectList.innerHTML = '';
+    if (!list.length) {
+        noProjectsMsg.hidden = false;
+        return;
+    } else {
+        noProjectsMsg.hidden = true;
+    }
+
+    list.forEach(p => {
+        const li = document.createElement('li');
+        li.className = 'project-item';
+        
+        const escapeHtml = (unsafe) => {
+            return String(unsafe).replace(/[&<>"'`]/g, (s) => ({
+            '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;', '`':'&#96;'
+            })[s]);
+        };
+
+        li.innerHTML = `
+            <div>
+                <strong>${escapeHtml(p.title)}</strong>
+                <div class="project-meta">${p.category} • ${p.date}</div>
+            </div>
+            <div class="project-body">${escapeHtml(p.desc)}</div>
+            <button class="btn-toggle">Show Details</button>
+            <div class="project-details" hidden style="margin-top:0.5rem; font-style:italic; color:var(--accent-color);">
+                ${escapeHtml('More detailed info about ' + p.title + '...')}
+            </div>
+        `;
+        
+        const toggleBtn = li.querySelector('.btn-toggle');
+        const detailsDiv = li.querySelector('.project-details');
+        
+        toggleBtn.addEventListener('click', () => {
+            const isHidden = detailsDiv.hidden;
+            detailsDiv.hidden = !isHidden;
+            toggleBtn.textContent = isHidden ? "Hide Details" : "Show Details";
+        });
+
+        projectList.appendChild(li);
+    });
+}
+
+async function fetchQuote() {
+    quoteResult.textContent = 'Loading...';
+    try {
+        const res = await fetch('https://api.quotable.io/random', { cache: 'no-store' });
+        if (!res.ok) throw new Error('Fetch failed');
+        const data = await res.json();
+        quoteResult.textContent = `"${data.content}" — ${data.author}`;
+    } catch (err) {
+        console.warn('Quote fetch failed:', err);
+        const fallback = [
+            'Simplicity is the soul of efficiency. — Anonymous',
+            'Done is better than perfect. — Anonymous',
+            'Small progress is still progress. — Anonymous'
+        ];
+        quoteResult.textContent = fallback[Math.floor(Math.random() * fallback.length)];
+    }
+}
+
+
+function validateContactForm() {
+  let isValid = true;
+
+  if (contactNameInput.value.trim().length === 0) {
+    contactNameError.textContent = 'Name is required.';
+    isValid = false;
+  } else {
+    contactNameError.textContent = '';
+  }
+
+  const email = contactEmailInput.value.trim();
+  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (email.length === 0) {
+    contactEmailError.textContent = 'Email is required.';
+    isValid = false;
+  } else if (!emailPattern.test(email)) {
+    contactEmailError.textContent = 'Please enter a valid email address.';
+    isValid = false;
+  } else {
+    contactEmailError.textContent = '';
+  }
+
+  if (contactMessageInput.value.trim().length === 0) {
+    contactMessageError.textContent = 'Message is required.';
+    isValid = false;
+  } else {
+    contactMessageError.textContent = '';
+  }
+
+  contactSubmitBtn.disabled = !isValid;
+  return isValid;
+}
+
+function handleContactSubmit(event) {
+  event.preventDefault();
+  const ok = validateContactForm();
+  if (!ok) return;
+
+  contactSuccess.textContent =
+    'Thank you! Your message has been sent (simulation).';
+  contactForm.reset();
+  contactSubmitBtn.disabled = true;
+}
+
+function setupEventListeners() {
+  themeToggleBtn.addEventListener('click', toggleTheme);
+  
+  toggleProjectsBtn.addEventListener('click', toggleProjectsVisibility);
+  toggleWeatherBtn.addEventListener('click', toggleWeatherVisibility);
+
+  saveNameBtn.addEventListener('click', saveName);
+
+  weatherForm.addEventListener('submit', handleWeatherSubmit);
+  tempFilterSelect.addEventListener('change', () => {
+    applyWeatherFilters();
+    renderWeather();
+  });
+  conditionFilterSelect.addEventListener('change', () => {
+    applyWeatherFilters();
+    renderWeather();
+  });
+
+  searchInput.addEventListener('input', () => renderProjects(getFilteredProjects()));
+  filterCategory.addEventListener('change', () => renderProjects(getFilteredProjects()));
+  sortSelect.addEventListener('change', () => renderProjects(getFilteredProjects()));
+
+  fetchQuoteBtn.addEventListener('click', fetchQuote);
+
+  contactNameInput.addEventListener('input', validateContactForm);
+  contactEmailInput.addEventListener('input', validateContactForm);
+  contactMessageInput.addEventListener('input', validateContactForm);
+  contactForm.addEventListener('submit', handleContactSubmit);
+}
