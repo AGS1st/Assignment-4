@@ -58,3 +58,70 @@ document.addEventListener("DOMContentLoaded", () => {
     renderProjects(getFilteredProjects()); 
     setupEventListeners();
 });
+
+function initTheme() {
+    const savedTheme = localStorage.getItem("theme");
+    if (savedTheme == "dark") {
+        document.body.classList.add("dark");
+        state.theme = "dark";
+        themeToggleBtn.textContent = "Switch to Light Mode";
+    } else{
+        state.theme = "light";
+        themeToggleBtn.textContent = "Switch to Dark Mode";
+    }
+}
+
+function toggleTheme() {
+    if (state.theme === "light"){
+        state.theme = "dark";
+        document.body.classList.add("dark");
+        themeToggleBtn.textContent = "Switch to Light Mode";
+    } else {
+        state.theme = "light";
+        document.body.classList.remove("dark");
+        themeToggleBtn.textContent = "Switch to Dark Mode";
+    }
+    localStorage.setItem("theme", state.theme);
+}
+
+function initName() {
+    const savedName = localStorage.getItem("visitorName");
+    if (savedName) {
+        greeting.textContent = `Welcome back, ${savedName}!`;
+        visitorNameInput.value = savedName;
+    }
+}
+
+function saveName() {
+    const name = visitorNameInput.value.trim();
+    if (name.length > 0){
+        localStorage.setItem("visitorName", name);
+        greeting.textContent = `Welcome, ${name}`;
+    }
+}
+
+function startTimer(){
+    setInterval(() => {
+        state.secondsOnSite += 1;
+        timeOnSiteSpan.textContent = state.secondsOnSite.toString();
+    }, 1000);
+}
+
+function toggleProjectsVisibility() {
+    state.showProjects = !state.showProjects;
+    projectsSection.hidden = !state.showProjects;
+    toggleProjectsBtn.textContent = state.showProjects ? "Hide Projects" : "Show Projects";
+}
+
+function toggleWeatherVisibility() {
+    state.showWeather = !state.showWeather;
+    weatherSection.hidden = !state.showWeather;
+    toggleWeatherBtn.textContent = state.showWeather ? "Hide Weather" : "Show Weather";
+}
+
+function handleWeatherSubmit(event){
+    event.preventDefault();
+    const city = cityInput.value.trim();
+    if (!city) return;
+    fetchWeather(city);
+}
