@@ -20,3 +20,101 @@
             <button id="save-name">Save Name</button>
         </div>
     </header>
+    <main>
+        <section id="weather">
+            <h2>Current Weather</h2>
+            <form id="weather-form">
+                <label for="city-input">Enter city: </label>
+                <input type="text" id="city-input" placeholder="e.g. jeddah" required>
+                <button type="submit">Get Weather</button>
+            </form>
+
+            <div class="filters">
+                <label for="temp-filter">Temp:</label>
+                <select id="temp-filter">
+                    <option value="all">All</option>
+                    <option value="hot">Hot (≥ 30°C)</option>
+                    <option value="warm">Warm (20–29°C)</option>
+                    <option value="cold">Cold (&lt; 20°C)</option>
+                </select>
+
+                <label for="condition-filter">Condition:</label>
+                <select id="condition-filter">
+                    <option value="all">All</option>
+                    <option value="clear">Clear</option>
+                    <option value="cloud">Cloudy</option>
+                    <option value="rain">Rainy</option>
+                </select>
+            </div>
+
+            <div id="weather-result">
+                <p>Type a city and click "Get Weather" to see the forecast.</p>
+            </div>
+            <p id="weather-error" class="error-message" hidden></p>
+        </section>
+
+        <section id="projects">
+            <h2>My Projects</h2>
+            
+            <div class="project-controls">
+                <input id="search-projects" type="search" placeholder="Search projects..." aria-label="Search projects">
+                <select id="filter-category" aria-label="Filter projects">
+                    <option value="all">All Categories</option>
+                    <option value="web">Web Development</option>
+                    <option value="data">Data Science</option>
+                    <option value="other">Other</option>
+                </select>
+                <select id="sort-projects" aria-label="Sort projects">
+                    <option value="newest">Newest First</option>
+                    <option value="title">Title (A-Z)</option>
+                </select>
+            </div>
+
+            <ul id="project-list" class="project-list">
+                
+            </ul>
+            <div id="no-projects" class="error-message" hidden>No projects found matching your criteria.</div>
+        </section>
+
+        <section id="quote-section">
+            <h2>Random Quote</h2>
+            <div id="quote-area">
+                <p id="quote-result">Click the button to fetch a quote.</p>
+                <button id="fetch-quote">Load New Quote</button>
+            </div>
+        </section>
+
+        <section id="timer-section">
+            <h2>Time on Site</h2>
+            <p>You have been on this page for <span id="time-on-site">0</span> seconds.</p>
+        </section>
+
+        <section id="contact">
+            <h2>Contact Me</h2>
+            <form id="contact-form" novalidate>
+                <div>
+                    <label for="contact-name">Name:</label>
+                    <input type="text" id="contact-name" required>
+                    <small class="error" id="contact-name-error"></small>
+                </div>
+
+                <div>
+                    <label for="contact-email">Email:</label>
+                    <input type="email" id="contact-email" required>
+                    <small class="error" id="contact-email-error"></small>
+                </div>
+
+                <div>
+                    <label for="contact-message">Message:</label>
+                    <textarea id="contact-message" required></textarea>
+                    <small class="error" id="contact-message-error"></small>
+                </div>
+                <button type="submit" id="contact-submit" disabled>Send Message</button>
+                <p id="contact-success" class="success"></p>
+            </form>
+        </section>
+    </main>
+    
+    <script src="js/script.js"></script>
+</body>
+</html>
