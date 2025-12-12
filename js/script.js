@@ -59,6 +59,28 @@ document.addEventListener("DOMContentLoaded", () => {
     setupEventListeners();
 });
 
+function getGreetingTime() {
+    const h = new Date().getHours();
+    if (h < 12) return "Good Morning";
+    if (h < 18) return "Good Afternoon";
+    return "Good Evening";
+}
+
+function scrollToSection(sectionId) {
+    const section = document.getElementById(sectionId);
+
+    if (sectionId === 'projects' && !state.showProjects) {
+        toggleProjectsVisibility();
+    }
+    if (sectionId === 'weather' && !state.showWeather) {
+        toggleWeatherVisibility();
+    }
+
+    if (section) {
+        section.scrollIntoView({ behavior: 'smooth' });
+    }
+}
+
 function initTheme() {
     const savedTheme = localStorage.getItem("theme");
     if (savedTheme == "dark") {
