@@ -1,7 +1,7 @@
 # Assignment-4
 Overview:
 this is my personal portfolio web application that demonstrates:
- ## 1- External API integration
+ * 1- External API integration
   2- implementing (filtering, sorting, validation) logic
   3- basic optimizations.
 
